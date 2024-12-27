@@ -6,9 +6,18 @@ const createUrl = async (req, res, next) => {
         return res.json({ url })
     } catch (error) {
         console.log(error);
-
-        return res.status(500).json({ message: 'Internal server error' });
+        next(error);
     }
 }
 
-module.exports = { createUrl }
+const getUrlByAlias = async (req, res, next) => {
+    try {
+        const url = await urlService.getUrlByAlias(req)
+        return res.redirect(url?.long_url);
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+}
+
+module.exports = { createUrl, getUrlByAlias }

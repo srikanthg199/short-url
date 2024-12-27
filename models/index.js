@@ -19,5 +19,7 @@ const db = {
 
 db.User = require("./user")(sequelize, Sequelize);
 db.ShortUrl = require("./shorturl")(sequelize, Sequelize);
+db.Analytics = require("./analytics")(sequelize, Sequelize);
+db.ShortUrl.hasMany(db.Analytics, { foreignKey: "short_url_id", sourceKey: "id" });
 
 module.exports = db;

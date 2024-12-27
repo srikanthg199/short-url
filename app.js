@@ -7,6 +7,7 @@ const v1Route = require("./src/routes");
 const passport = require("passport");
 const session = require("express-session");
 const jwt = require('jsonwebtoken');
+const { errorMiddleware } = require("./src/middlewares/error.middleware");
 
 
 app.use(express.json());
@@ -62,7 +63,9 @@ app.get("/hello", (req, res) => {
 })
 
 //V1 Route
-app.use("/api/v1/", v1Route)
+app.use("/api/v1/", v1Route);
+
+app.use(errorMiddleware)
 
 //DB Connection
 db.sequelize.authenticate().then(() => {
