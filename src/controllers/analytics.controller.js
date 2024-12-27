@@ -17,4 +17,16 @@ const getAnalyticsByTopic = async (req, res, next) => {
         next(error);
     }
 }
-module.exports = { getAnalyticsByAlias, getAnalyticsByTopic }
+
+const getOverallAnalytics = async (req, res, next) => {
+    try {
+        console.log(/d/);
+
+        const analytics = await analyticsService.getOverallAnalytics(req)
+        res.json({ analytics })
+    } catch (error) {
+        next(error);
+    }
+}
+
+module.exports = { getAnalyticsByAlias, getAnalyticsByTopic, getOverallAnalytics }
