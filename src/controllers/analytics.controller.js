@@ -20,8 +20,6 @@ const getAnalyticsByTopic = async (req, res, next) => {
 
 const getOverallAnalytics = async (req, res, next) => {
     try {
-        console.log(/d/);
-
         const analytics = await analyticsService.getOverallAnalytics(req)
         res.json({ analytics })
     } catch (error) {

@@ -52,7 +52,7 @@ app.get(
         failureRedirect: "/",
     }),
     (req, res) => {
-        const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET, { expiresIn: "12h" });
         res.json({ message: "Login successful", token });
     }
 );

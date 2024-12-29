@@ -4,7 +4,7 @@ const analyticsRepository = require("../repositories/analytics.repository");
 
 const createUrl = async (req) => {
     const { longUrl, customAlias, topic } = req.body;
-    console.log(/c/, customAlias);
+    console.log(/c/, req.user);
     if (customAlias) {
         const existingUrl = await urlRepository.getUrl({ where: { alias: customAlias } });
         if (existingUrl) {

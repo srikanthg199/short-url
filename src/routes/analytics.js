@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const analyticsController = require("../controllers/analytics.controller");
-const { logAnalytics } = require("../middlewares/analyticsLogger");
+const { isAuthenticated } = require("../middlewares/authentication");
 
-router.get("/overall", analyticsController.getOverallAnalytics);
+router.get("/overall", isAuthenticated, analyticsController.getOverallAnalytics);
 router.get("/:alias", analyticsController.getAnalyticsByAlias);
 router.get("/topic/:topic", analyticsController.getAnalyticsByTopic);
 

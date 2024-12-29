@@ -2,9 +2,9 @@ module.exports = (sequelize, Sequelize) => {
   return sequelize.define("users", {
     id: {
       allowNull: false,
+      autoIncrement: true,
       primaryKey: true,
-      type: Sequelize.UUID,
-      defaultValue: Sequelize.UUIDV4,
+      type: Sequelize.INTEGER
     },
     full_name: {
       type: Sequelize.STRING(100),

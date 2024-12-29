@@ -8,14 +8,20 @@ const jwt = require('jsonwebtoken');
 //     return next();
 // };
 
-
-exports.isAuthenticated = (req, res, next) => {
-    const token = req.headers["authorization"];
-    if (!token) {
-        return res.status(401).json({ message: "Unauthorized" });
+const extractToken = (headers) => {
+    if (headers.authorization && headers.authorization.split(" ")[0] === "Bearer") {
+        return headers.authorization.split(" ")[1];
     }
+    return null;
+};
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+exports.isAuthenticated = async (req, res, next) => {
+    const jwtToken = extractToken(req.headers);
+    console.log('token', jwtToken);
+    if (!jwtToken) {
+        return res.status(401).json({ message: "Please provide token" });
+    }
+    jwt.verify(jwtToken, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
             return res.status(401).json({ message: "Unauthorized" });
         }

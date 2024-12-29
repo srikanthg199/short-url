@@ -181,7 +181,7 @@ const getAnalyticsByTopic = async (req) => {
 
 const getOverallAnalytics = async (req) => {
     // const { user } = req;
-    const userUrls = await ShortUrl.findAll({ where: { created_by: 1 } }); //Dynamic
+    const userUrls = await ShortUrl.findAll({ where: { created_by: req.user.id } }); //Dynamic
 
     // Get analytics for all short URLs created by the user
     const analytics = await Analytics.findAll({
