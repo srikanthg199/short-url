@@ -9,6 +9,7 @@ const passport = require("passport");
 const jwt = require('jsonwebtoken');
 const rateLimit = require("express-rate-limit");
 const { errorMiddleware } = require("./src/middlewares/error.middleware");
+const { connectRedis } = require('./src/utils/redis');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -61,13 +62,26 @@ app.use("/api/v1/", v1Route);
 
 app.use(errorMiddleware)
 
-//DB Connection
-db.sequelize.authenticate().then(() => {
-    console.log('DB Connection has been established successfully.');
-}).catch((error) => {
-    console.error('Unable to connect to the database: ', error);
-});
+// Initialize app
+const initializeApp = async () => {
+    try {
+        // Connect to Redis
+        await connectRedis();
+        console.log('Redis connected successfully.');
 
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
+        // DB Connection
+        await db.sequelize.authenticate();
+        console.log('DB Connection has been established successfully.');
+
+        // Start the Express server after Redis and DB are connected
+        app.listen(port, () => {
+            console.log(`Server running on port ${port}`);
+        });
+
+    } catch (err) {
+        console.error('Error during initialization:', err);
+        process.exit(1); // Exit the app if Redis or DB connection fails
+    }
+};
+
+initializeApp();

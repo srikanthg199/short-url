@@ -1,9 +1,17 @@
 const { Sequelize, Op } = require("sequelize");
 const { ShortUrl, Analytics } = require("../../models");
 const analyticsRepository = require("../repositories/analytics.repository");
+const { redisClient } = require("../utils/redis");
 
 const getAnalyticsByAlias = async (req) => {
     const { alias } = req.params;
+
+    const cacheKey = `analytics:${alias}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+        return JSON.parse(cachedData);
+    }
+
     const shortUrl = await ShortUrl.findOne({ where: { alias } });
 
     if (!shortUrl) throw new Error("Short URL not found");
@@ -45,7 +53,7 @@ const getAnalyticsByAlias = async (req) => {
         return acc;
     }, {});
 
-    return {
+    const analyticsData = {
         totalClicks,
         uniqueClicks,
         clicksByDate,
@@ -60,6 +68,11 @@ const getAnalyticsByAlias = async (req) => {
             uniqueUsers: value.uniqueUsers.size,
         })),
     };
+
+    // Store in cache for future requests (TTL: 10 minutes)
+    await redisClient.set(cacheKey, JSON.stringify(analyticsData), { EX: 600 });
+
+    return analyticsData;
 }
 
 const testAnalytics = async (req) => {
