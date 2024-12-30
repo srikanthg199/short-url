@@ -6,25 +6,13 @@ const app = express();
 const port = process.env.PORT || 3000;
 const v1Route = require("./src/routes");
 const passport = require("passport");
-const session = require("express-session");
 const jwt = require('jsonwebtoken');
 const { errorMiddleware } = require("./src/middlewares/error.middleware");
-
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session middleware
-app.use(
-    session({
-        secret: "mySuperSecret",
-        resave: true,
-        saveUninitialized: false,
-        cookie: { maxAge: 60000 * 60 }, // 60 minute
-    })
-);
 app.use(passport.initialize());
-app.use(passport.session());
 
 app.use(express.static("public"));
 
@@ -50,6 +38,7 @@ app.get(
 app.get(
     "/google/callback",
     passport.authenticate("google", {
+        session: false,
         failureRedirect: "/",
     }),
     (req, res) => {
