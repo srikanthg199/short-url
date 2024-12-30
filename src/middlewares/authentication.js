@@ -1,12 +1,4 @@
 const jwt = require('jsonwebtoken');
-// exports.isAuthenticated = (req, res, next) => {
-//     if (!req.isAuthenticated() || !req.user) {
-//         console.log(/gg/);
-
-//         return res.status(401).json({ message: "Unauthorized" });
-//     }
-//     return next();
-// };
 
 const extractToken = (headers) => {
     if (headers.authorization && headers.authorization.split(" ")[0] === "Bearer") {

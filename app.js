@@ -1,5 +1,5 @@
-require("./src/utils/passport")
 require('dotenv').config();
+require("./src/utils/passport")
 const express = require("express");
 const db = require("./models");
 const app = express();
@@ -7,6 +7,7 @@ const port = process.env.PORT || 3000;
 const v1Route = require("./src/routes");
 const passport = require("passport");
 const jwt = require('jsonwebtoken');
+const rateLimit = require("express-rate-limit");
 const { errorMiddleware } = require("./src/middlewares/error.middleware");
 
 app.use(express.json());
@@ -16,17 +17,21 @@ app.use(passport.initialize());
 
 app.use(express.static("public"));
 
+// Rate limiting configuration
+const limiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 150, // Limit each IP to 100 requests per windowMs
+    message: { message: "Too many requests, please try again later." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Apply rate limiter to all requests
+app.use(limiter);
+
 //Base route
 app.get("/", (req, res) => {
     res.sendFile(__dirname + "/src/public/index.html");
-});
-
-app.get("/profile", (req, res) => {
-    if (req.user) {
-        res.send("User successfully logged in")
-    } else {
-        res.redirect("/");
-    }
 });
 
 // Google OAuth Routes
@@ -48,7 +53,6 @@ app.get(
 );
 
 app.get("/hello", (req, res) => {
-    console.log(/req/, req.user);
     res.json({ message: "Hello World!" });
 })
 
