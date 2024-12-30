@@ -40,6 +40,10 @@ The application requires the following environment variables:
 -   `GOOGLE_CLIENT_SECRET`: Google OAuth client secret
 -   `JWT_SECRET`: Secret key for JWT token generation
 -   `BASE_URL`: Base URL for the application
+-   `REDIS_HOST`: Host URL for the Redis server
+-   `REDIS_PORT`: Port on which the Redis server is running
+-   `REDIS_PASSWORD`: Password for authenticating with the Redis server
+-   `REDIS_USERNAME`: Username for authenticating with the Redis server
 
 ---
 
