@@ -193,39 +193,44 @@ const getAnalyticsByTopic = async (req) => {
 }
 
 const getOverallAnalytics = async (req) => {
-    // const { user } = req;
-    console.log(/u/, req.user);
+    const { user } = req;
 
-    const userUrls = await ShortUrl.findAll({ where: { created_by: req.user.id } }); //Dynamic
-
-    // Get analytics for all short URLs created by the user
-    const analytics = await Analytics.findAll({
-        where: {
-            short_url_id: { [Op.in]: userUrls.map(url => url.id) }
-        },
+    // Fetch analytics data aggregated at the database level
+    const analyticsData = await ShortUrl.findAll({
+        where: { created_by: user.id },
         attributes: [
-            [Sequelize.fn("COUNT", Sequelize.col("id")), "totalClicks"],
-            [Sequelize.fn("COUNT", Sequelize.fn("DISTINCT", Sequelize.col("ip_address"))), "uniqueClicks"],
-            [Sequelize.fn("DATE", Sequelize.col("created_at")), "date"],
-            "os_name",
-            "device_name"
+            [Sequelize.fn("COUNT", Sequelize.col("Analytics.id")), "totalClicks"],
+            [
+                Sequelize.fn("COUNT", Sequelize.fn("DISTINCT", Sequelize.col("Analytics.ip_address"))),
+                "uniqueClicks"
+            ],
+            [Sequelize.fn("DATE", Sequelize.col("Analytics.created_at")), "date"],
+            [Sequelize.col("Analytics.os_name"), "os_name"],
+            [Sequelize.col("Analytics.device_name"), "device_name"]
+        ],
+        include: [
+            {
+                model: Analytics,
+                as: "Analytics",
+                attributes: [],
+                required: true,
+            }
         ],
         group: [
-            "date",
-            "os_name",
-            "device_name"
+            [Sequelize.fn("DATE", Sequelize.col("Analytics.created_at"))],
+            "Analytics.os_name",
+            "Analytics.device_name"
         ],
         raw: true,
     });
-    // Calculate total number of short URLs
-    const totalUrls = userUrls.length;
 
-    // Calculate total clicks and unique clicks
-    const totalClicks = analytics.reduce((sum, row) => sum + (+row.totalClicks || 0), 0);
-    const uniqueClicks = new Set(analytics.map(row => row.ip_address)).size;
+    // Aggregate data to build the response
+    const totalUrls = await ShortUrl.count({ where: { created_by: user.id } });
+    const totalClicks = analyticsData.reduce((sum, row) => sum + (+row.totalClicks || 0), 0);
+    const uniqueClicks = analyticsData.reduce((acc, row) => acc + (+row.uniqueClicks || 0), 0);
 
     // Aggregate clicks by date
-    const clicksByDate = analytics.reduce((acc, row) => {
+    const clicksByDate = analyticsData.reduce((acc, row) => {
         const date = row.date;
         if (!acc[date]) {
             acc[date] = { date, clickCount: 0 };
@@ -233,42 +238,29 @@ const getOverallAnalytics = async (req) => {
         acc[date].clickCount += +row.totalClicks || 0;
         return acc;
     }, {});
-
     const clicksByDateArray = Object.values(clicksByDate);
 
     // Aggregate OS type statistics
-    const osType = analytics.reduce((acc, row) => {
+    const osType = analyticsData.reduce((acc, row) => {
         const osName = row.os_name;
         if (!acc[osName]) {
-            acc[osName] = { osName, uniqueClicks: 0, uniqueUsers: new Set() };
+            acc[osName] = { osName, uniqueClicks: 0 };
         }
         acc[osName].uniqueClicks += +row.uniqueClicks || 0;
-        acc[osName].uniqueUsers.add(row.ip_address);
         return acc;
     }, {});
-
-    const osTypeArray = Object.values(osType).map(os => ({
-        osName: os.osName,
-        uniqueClicks: os.uniqueClicks,
-        uniqueUsers: os.uniqueUsers.size
-    }));
+    const osTypeArray = Object.values(osType);
 
     // Aggregate device type statistics
-    const deviceType = analytics.reduce((acc, row) => {
+    const deviceType = analyticsData.reduce((acc, row) => {
         const deviceName = row.device_name;
         if (!acc[deviceName]) {
-            acc[deviceName] = { deviceName, uniqueClicks: 0, uniqueUsers: new Set() };
+            acc[deviceName] = { deviceName, uniqueClicks: 0 };
         }
         acc[deviceName].uniqueClicks += +row.uniqueClicks || 0;
-        acc[deviceName].uniqueUsers.add(row.ip_address);
         return acc;
     }, {});
-
-    const deviceTypeArray = Object.values(deviceType).map(device => ({
-        deviceName: device.deviceName,
-        uniqueClicks: device.uniqueClicks,
-        uniqueUsers: device.uniqueUsers.size
-    }));
+    const deviceTypeArray = Object.values(deviceType);
 
     return {
         totalUrls,
@@ -276,8 +268,11 @@ const getOverallAnalytics = async (req) => {
         uniqueClicks,
         clicksByDate: clicksByDateArray,
         osType: osTypeArray,
-        deviceType: deviceTypeArray
+        deviceType: deviceTypeArray,
     };
-}
+};
+
+
+
 
 module.exports = { getAnalyticsByAlias, getAnalyticsByTopic, getOverallAnalytics, testAnalytics, };
