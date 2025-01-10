@@ -12,6 +12,7 @@ const createUrl = async (req) => {
         }
     }
     const shortUrl = customAlias || generateUniqueAlias();
+
     const newShortUrl = {
         long_url: longUrl,
         alias: shortUrl,
